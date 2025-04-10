@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gestor de Clientes Premium</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fce4ec;
+      padding: 20px;
+      margin: 0;
+      color: #880e4f;
+    }
+    h2, h3 {
+      text-align: center;
+    }
+    .formulario, table {
+      max-width: 100%;
+      margin: auto;
+    }
+    .formulario {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(136, 14, 79, 0.2);
+      margin-bottom: 20px;
+    }
+    .formulario input, .formulario button {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #f8bbd0;
+    }
+    .formulario button {
+      background-color: #ec407a;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }.producto-item {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 5px;
+    }
+    .producto-item input {
+      width: 50%;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 2px 8px rgba(136, 14, 79, 0.2);
+    }
+    th, td {
+      border: 1px solid #f8bbd0;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background-color: #fce4ec;
+      color: #880e4f;
+    }
+    img {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .delete-btn {
+      background-color: #e91e63;
+      color: white;
+      border: none;
+      padding: 5px 8px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .formatear-btn {
+      display: block;
+      background-color: #d81b60;
+      color: white;
+      border: none;
+      padding: 10px;
+      margin: 20px auto;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #total, #contador, #alertas, #frecuentes, #productosTop, #gananciaTotal, #ganancia {
+      text-align: center;
+      font-size: 18px;
+      margin: 10px 0;
+    }
+    @media screen and (max-width: 768px) {
+      table {
+        display: block;
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h2>Agregar Cliente</h2>
+<div class="formulario">
+  <input type="text" id="nombre" maxlength="30" placeholder="Nombre">
+  <input type="text" id="apellido1" maxlength="30" placeholder="Primer Apellido">
+  <input type="text" id="apellido2" maxlength="30" placeholder="Segundo Apellido">
+
+  <div id="productosContainer"></div>
+  <button type="button" onclick="agregarProductoCampo()">Agregar producto</button>
+
+  <input type="tel" id="valor" placeholder="₡ Valor total" readonly style="background:#fce4ec; font-weight:bold;">
+  <input type="tel" id="telefono" maxlength="9" placeholder="Teléfono (7055-2950)" oninput="formatTelefono(this)">
+  <input type="file" id="imagen" multiple>
+  <button onclick="agregarCliente()">Agregar Cliente</button>
+</div>
+
+<div id="contador">Total de clientes: 0</div>
+<div id="alertas"></div>
+<div id="frecuentes"></div>
+<div id="productosTop"></div>
+
+<div id="inversion" class="formulario">
+  <label>Inversión inicial: 
+    <input type="tel" id="montoInversion" placeholder="₡ Monto" onfocus="confirmarCambioMonto()" oninput="formatValor(this)" inputmode="numeric" maxlength="10">
+  </label>
+  <button onclick="guardarInversion()">Guardar inversión</button>
+  <div id="ganancia"></div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Productos</th>
+      <th>Valor</th>
+      <th>Estado</th>
+      <th>WhatsApp</th>
+      <th>Imágenes</th>
+      <th>Factura</th>
+      <th>Acción</th>
+    </tr>
+  </thead>
+  <tbody id="clientes"></tbody>
+</table>
+
+<div id="total">Total cancelado: ₡0</div>
+<div id="gananciaTotal"></div>
+
+<!-- Botón con función ya actualizada en el próximo fragmento -->
+<button class="formatear-btn" onclick="formatearClientes()">Formatear Clientes</button>
+
+<script>let clientes = JSON.parse(localStorage.getItem("clientes") || "[]");
+let productosTemp = [];
+let inversionEditada = false;
+
+document.addEventListener("DOMContentLoaded", () => {
+  const montoGuardado = localStorage.getItem("inversion");
+  if (montoGuardado) {
+    document.getElementById("montoInversion").value = '₡' + parseInt(montoGuardado).toLocaleString('es-CR');
+    calcularBeneficios();
+  }
+  actualizarVista();
+  setInterval(actualizarVista, 1000);
+  agregarProductoCampo();
+});
+
+function confirmarCambioMonto() {
+  if (!inversionEditada) {
+    alert("Vas a cambiar el monto de inversión");
+    inversionEditada = true;
+  }
+}
+
+function formatValor(input) {
+  let num = input.value.replace(/[^\d]/g, '').slice(0, 10);
+  input.value = num ? '₡' + parseInt(num).toLocaleString('es-CR') : '';
+}
+
+function formatTelefono(input) {
+  let raw = input.value.replace(/[^\d]/g, '').slice(0, 8);
+  if (raw.length > 4) {
+    input.value = raw.slice(0, 4) + '-' + raw.slice(4);
+  } else {
+    input.value = raw;
+  }
+}
+
+function agregarProductoCampo() {
+  const contenedor = document.getElementById("productosContainer");
+  const div = document.createElement("div");
+  div.classList.add("producto-item");
+  div.innerHTML = `
+    <input type="text" placeholder="Nombre del producto" class="nombreProducto">
+    <input type="number" placeholder="Precio" class="precioProducto" oninput="actualizarValorTotal()">
+  `;
+  contenedor.appendChild(div);
+  productosTemp.push({});
+}
+
+function actualizarValorTotal() {
+  let total = 0;
+  document.querySelectorAll(".precioProducto").forEach(input => {
+    const val = parseInt(input.value);
+    if (!isNaN(val)) total += val;
+  });
+  document.getElementById("valor").value = '₡' + total.toLocaleString('es-CR');
+}
+
+function formatearClientes() {
+  const pass = prompt("Contraseña:");
+  if (pass === "brandon2004") {
+    if (confirm("¿Deseas borrar todos los datos de clientes e inversión?")) {
+      clientes = [];
+      localStorage.removeItem("clientes");
+      localStorage.removeItem("inversion");
+      document.getElementById("montoInversion").value = "";
+      actualizarVista();
+      calcularBeneficios();
+    }
+  } else {
+    alert("Contraseña incorrecta.");
+  }
+}function agregarCliente() {
+  const nombre = document.getElementById("nombre").value.trim();
+  const apellido1 = document.getElementById("apellido1").value.trim();
+  const apellido2 = document.getElementById("apellido2").value.trim();
+  const nombreCompleto = `${nombre} ${apellido1} ${apellido2}`;
+  const telefono = document.getElementById("telefono").value.replace(/[^\d]/g, '');
+  const imagenInput = document.getElementById("imagen");
+  const fecha = new Date().toISOString();
+
+  if (!nombre || !apellido1 || !apellido2 || telefono.length < 8) {
+    return alert("Completa todos los campos correctamente.");
+  }
+
+  const productos = [];
+  const precios = document.querySelectorAll(".precioProducto");
+  const nombres = document.querySelectorAll(".nombreProducto");
+
+  let valorTotal = 0;
+  for (let i = 0; i < nombres.length; i++) {
+    const nombreProd = nombres[i].value.trim();
+    const precioProd = parseInt(precios[i].value.trim());
+    if (!nombreProd || isNaN(precioProd)) {
+      return alert("Completa nombre y precio de cada producto.");
+    }
+    productos.push({ nombre: nombreProd, precio: precioProd });
+    valorTotal += precioProd;
+  }
+
+  if (clientes.some(c => c.nombre.toLowerCase() === nombreCompleto.toLowerCase())) {
+    return alert("Ese cliente ya existe.");
+  }
+
+  const nuevoCliente = {
+    nombre: nombreCompleto,
+    productos,
+    valor: valorTotal,
+    telefono,
+    fechaRegistro: fecha,
+    cancelado: false,
+    canceladoAntes: false,
+    fechaCancelado: null,
+    imagenes: [],
+    relojInicio: Date.now()
+  };
+
+  const files = Array.from(imagenInput.files || []);
+  if (files.length > 0) {
+    let cargadas = 0;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        nuevoCliente.imagenes.push(e.target.result);
+        cargadas++;
+        if (cargadas === files.length) {
+          clientes.push(nuevoCliente);
+          guardarYActualizar();
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  } else {
+    clientes.push(nuevoCliente);
+    guardarYActualizar();
+  }
+
+  // Limpiar formulario
+  document.getElementById("nombre").value = "";
+  document.getElementById("apellido1").value = "";
+  document.getElementById("apellido2").value = "";
+  document.getElementById("telefono").value = "";
+  document.getElementById("imagen").value = "";
+  document.getElementById("productosContainer").innerHTML = "";
+  productosTemp = [];
+  agregarProductoCampo();
+  actualizarValorTotal();
+}function actualizarVista() {
+  const cuerpo = document.getElementById("clientes");
+  cuerpo.innerHTML = "";
+  let totalCancelado = 0;
+  let totalGeneral = 0;
+  let cancelados = 0;
+  let productos = {};
+  let compras = {};
+
+  clientes.forEach((c, i) => {
+    const tiempo = Date.now() - c.relojInicio;
+    const tiempoStr = msATiempo(tiempo);
+
+    if (c.cancelado) {
+      totalCancelado += c.valor;
+      cancelados++;
+    }
+    totalGeneral += c.valor;
+
+    c.productos.forEach(p => {
+      productos[p.nombre] = (productos[p.nombre] || 0) + 1;
+      compras[c.nombre] = (compras[c.nombre] || 0) + 1;
+    });
+
+    const mensaje = !c.cancelado
+      ? `Producto pendiente: ${c.productos.map(p => `${p.nombre} - ₡${p.precio.toLocaleString('es-CR')}`).join(", ")}`
+      : '';
+    const enlace = c.telefono
+      ? `<a href="https://wa.me/506${c.telefono}?text=${encodeURIComponent(mensaje)}" target="_blank">${c.cancelado ? 'WhatsApp' : mensaje}</a>`
+      : '';
+
+    const estado = c.cancelado
+      ? 'Cancelado'
+      : `<input type="checkbox" onchange="marcarCancelado(${i}, this.checked)"> Pendiente
+         <br><button class="delete-btn" style="background:pink;" onclick="marcarCanceladoAntes(${i})">Cancelado antes</button>
+         <br><small>${tiempoStr}</small>`;
+
+    const imagenes = c.imagenes.map(img => `<img src="${img}" onclick="verImagen('${img}')">`).join("");
+
+    const fila = document.createElement("tr");
+    fila.innerHTML = `
+      <td>${c.nombre}</td>
+      <td>${c.productos.map(p => `${p.nombre} - ₡${p.precio.toLocaleString('es-CR')}`).join("<br>")}</td>
+      <td>₡${c.valor.toLocaleString('es-CR')}</td>
+      <td>${estado}</td>
+      <td>${enlace}</td>
+      <td>${imagenes}</td>
+      <td><button class="delete-btn" onclick="generarFactura(${i})">Factura</button></td>
+      <td><button class="delete-btn" onclick="eliminar(${i})">Eliminar</button></td>
+    `;
+    cuerpo.appendChild(fila);
+  });
+
+  document.getElementById("total").textContent = `Total cancelado: ₡${totalCancelado.toLocaleString('es-CR')}`;
+  document.getElementById("contador").textContent = `Total de clientes: ${clientes.length}`;
+
+  const topProd = Object.entries(productos).sort((a, b) => b[1] - a[1]);
+  document.getElementById("productosTop").textContent = topProd[0] ? `Más vendido: ${topProd[0][0]} (${topProd[0][1]} veces)` : "";
+
+  const topCompras = Object.entries(compras).sort((a, b) => b[1] - a[1]);
+  document.getElementById("frecuentes").textContent = topCompras[0] ? `Más frecuente: ${topCompras[0][0]} (${topCompras[0][1]} productos)` : "";
+
+  const inactivos = clientes.filter(c => !c.cancelado && Date.now() - c.relojInicio > 7 * 24 * 60 * 60 * 1000);
+  document.getElementById("alertas").textContent = inactivos.length > 0
+    ? `Clientes inactivos por más de 7 días: ${inactivos.length}`
+    : "";
+
+  calcularBeneficios(cancelados, totalCancelado, totalGeneral);
+}function marcarCancelado(i, estado) {
+  clientes[i].cancelado = estado;
+  if (estado) clientes[i].fechaCancelado = new Date().toISOString();
+  guardarYActualizar();
+}
+
+function marcarCanceladoAntes(i) {
+  if (confirm("¿Marcar como cancelado antes de tiempo?")) {
+    clientes[i].cancelado = true;
+    clientes[i].canceladoAntes = true;
+    clientes[i].fechaCancelado = new Date().toISOString();
+    guardarYActualizar();
+  }
+}
+
+function eliminar(i) {
+  clientes.splice(i, 1);
+  guardarYActualizar();
+}
+
+function guardarYActualizar() {
+  localStorage.setItem("clientes", JSON.stringify(clientes));
+  actualizarVista();
+}
+
+function generarFactura(i) {
+  const c = clientes[i];
+  const reloj = msATiempo(Date.now() - c.relojInicio);
+  const fecha = c.fechaCancelado
+    ? new Date(c.fechaCancelado).toLocaleDateString()
+    : "Pendiente";
+  const mensaje = `Factura electrónica de Brandon:
+Cliente: ${c.nombre}
+Productos: ${c.productos.map(p => `${p.nombre} - ₡${p.precio.toLocaleString('es-CR')}`).join(", ")}
+Valor total: ₡${c.valor.toLocaleString('es-CR')}
+Fecha de cancelación: ${fecha}
+Tiempo de espera: ${reloj}
+Gracias por comprar con Brandon.`;
+
+  window.open(`https://wa.me/506${c.telefono}?text=${encodeURIComponent(mensaje)}`, "_blank");
+}
+
+function verImagen(src) {
+  const win = window.open();
+  win.document.write('<img src="' + src + '" style="width:100%">');
+}
+
+function msATiempo(ms) {
+  const s = Math.floor(ms / 1000) % 60;
+  const m = Math.floor(ms / (1000 * 60)) % 60;
+  const h = Math.floor(ms / (1000 * 60 * 60)) % 24;
+  const d = Math.floor(ms / (1000 * 60 * 60 * 24));
+  return `${d}d ${h}h ${m}m ${s}s`;
+}
+
+function guardarInversion() {
+  const raw = document.getElementById("montoInversion").value.replace(/[^\d]/g, '');
+  const inversion = parseInt(raw) || 0;
+  localStorage.setItem("inversion", inversion);
+  calcularBeneficios();
+}
+
+function calcularBeneficios(cancelados = 0, totalCancelado = 0, totalGeneral = 0) {
+  const inversion = parseInt(localStorage.getItem("inversion")) || 0;
+  const beneficio = totalCancelado - inversion;
+
+  document.getElementById("ganancia").innerHTML =
+    `Total cancelado: ₡${totalCancelado.toLocaleString('es-CR')}<br>` +
+    `Inversión: ₡${inversion.toLocaleString('es-CR')}<br>` +
+    `Beneficio: <b style="color:${beneficio >= 0 ? 'green' : 'red'}">₡${beneficio.toLocaleString('es-CR')}</b>`;
+
+  document.getElementById("gananciaTotal").innerHTML =
+    `<b>Ganancia total acumulada: ₡${totalGeneral.toLocaleString('es-CR')}<br>
+    Productos cancelados: ${cancelados}</b>`;
+}
+</script>
+</body>
+                                     </html>
