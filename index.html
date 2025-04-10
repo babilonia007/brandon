@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gestor de Clientes Premium</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<h2>Agregar Cliente</h2>
+<div class="formulario">
+  <input type="text" id="nombre" maxlength="30" placeholder="Nombre">
+  <input type="text" id="apellido1" maxlength="30" placeholder="Primer Apellido">
+  <input type="text" id="apellido2" maxlength="30" placeholder="Segundo Apellido">
+
+  <div id="productosContainer"></div>
+  <button type="button" onclick="agregarProductoCampo()">Agregar producto</button>
+
+  <input type="tel" id="valor" placeholder="₡ Valor total" readonly style="background:#fce4ec; font-weight:bold;">
+  <input type="tel" id="telefono" maxlength="9" placeholder="Teléfono (7055-2950)" oninput="formatTelefono(this)">
+  <input type="file" id="imagen" multiple>
+  <button onclick="agregarCliente()">Agregar Cliente</button>
+</div>
+
+<div id="contador">Total de clientes: 0</div>
+<div id="alertas"></div>
+<div id="frecuentes"></div>
+<div id="productosTop"></div>
+
+<div id="inversion" class="formulario">
+  <label>Inversión inicial: 
+    <input type="tel" id="montoInversion" placeholder="₡ Monto" onfocus="confirmarCambioMonto()" oninput="formatValor(this)" inputmode="numeric" maxlength="10">
+  </label>
+  <button onclick="guardarInversion()">Guardar inversión</button>
+  <div id="ganancia"></div>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Productos</th>
+      <th>Valor</th>
+      <th>Estado</th>
+      <th>WhatsApp</th>
+      <th>Imágenes</th>
+      <th>Factura</th>
+      <th>Acción</th>
+    </tr>
+  </thead>
+  <tbody id="clientes"></tbody>
+</table>
+
+<div id="total">Total cancelado: ₡0</div>
+<div id="gananciaTotal"></div>
+
+<button class="formatear-btn" onclick="formatearClientes()">Formatear Clientes</button>
+
+<script src="script.js"></script>
+</body>
+</html>
