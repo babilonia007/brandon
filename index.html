@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Brandon · imagen completa</title>
+  <meta name="theme-color" content="#121212">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="description" content="Chat con imagen sin recorte">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💬</text></svg>">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div id="connectionStatus" class="connection-status"><span id="connectionIcon">⚫</span><span id="connectionText">Conectando...</span></div>
+
+  <div class="chat-container">
+    <div class="chat-messages" id="chatMessages">
+      <div class="loading-state" id="loadingState">
+        <div class="loading-spinner"></div>
+      </div>
+    </div>
+
+    <div class="reply-preview" id="replyPreview">
+      <span class="reply-preview-text" id="replyPreviewText"></span>
+      <button class="reply-close-button" id="closeReplyBtn">✕</button>
+    </div>
+
+    <form class="input-area" id="messageForm">
+      <div class="input-with-buttons-wrapper">
+        <div class="left-buttons-container">
+          <button type="button" class="app-btn-inside" id="micBtn" title="Grabar audio">🎤</button>
+          <button type="button" class="app-btn-inside" id="cameraBtn" title="Cámara">📷</button>
+          <button type="button" class="app-btn-inside" id="galleryBtn" title="Galería">📁</button>
+        </div>
+        <input type="text" class="message-input-with-buttons" id="messageInput" placeholder="Mensaje" autocomplete="off">
+      </div>
+    </form>
+  </div>
+
+  <!-- Audio recorder overlay -->
+  <div id="audioRecorderOverlay" class="audio-recorder-overlay">
+    <div class="audio-recorder-container">
+      <h2 style="color:#fff; margin-bottom:10px">🎤 Grabar audio</h2>
+      <div class="audio-wave" id="audioWave"></div>
+      <div class="audio-recorder-timer" id="audioTimer">00:00</div>
+      
+      <div id="audioPermissionSection">
+        <button class="permission-btn" id="requestMicPermissionBtn">🎤 Permitir micrófono</button>
+      </div>
+      
+      <div id="audioRecordingControls" style="display:none">
+        <div class="audio-controls">
+          <button class="audio-btn record" id="startRecordBtn" title="Grabar">⏺️</button>
+          <button class="audio-btn stop" id="stopRecordBtn" disabled title="Detener">⏹️</button>
+          <button class="audio-btn send" id="sendAudioBtn" disabled title="Enviar">📤</button>
+          <button class="audio-btn cancel" id="cancelAudioBtn" title="Cancelar">✕</button>
+        </div>
+        <p style="color:#aaa; margin-top:15px; font-size:14px" id="audioStatusText">Presiona grabar para comenzar</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cámara overlay -->
+  <div id="cameraOverlay" class="camera-overlay">
+    <div class="camera-container">
+      <div class="camera-preview">
+        <video id="cameraVideoElement" autoplay playsinline></video>
+        <canvas id="cameraCanvas" style="display:none"></canvas>
+        <img id="cameraPreviewResult" class="camera-preview-result" alt="preview">
+        <div class="camera-placeholder" id="cameraPlaceholder"><i class="fas fa-camera" style="font-size:40px"></i><p>Iniciando cámara...</p></div>
+        <button class="camera-switch-btn" id="cameraSwitchBtn" title="Cambiar cámara"><i class="fas fa-sync-alt"></i></button>
+        <button class="camera-flash-btn" id="cameraFlashBtn" title="Flash"><i class="fas fa-bolt"></i></button>
+      </div>
+      <div class="camera-buttons">
+        <button class="camera-btn primary" id="captureBtn"><i class="fas fa-camera"></i> Tomar foto</button>
+        <button class="camera-btn secondary" id="retakeBtn" style="display:none"><i class="fas fa-redo"></i> Repetir</button>
+        <button class="camera-btn primary" id="sendMediaBtn" style="display:none"><i class="fas fa-cloud-upload-alt"></i> Enviar</button>
+        <button class="camera-btn danger" id="closeCameraBtn"><i class="fas fa-times"></i> Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input file oculto y modal imagen -->
+  <input type="file" id="realFileInput" accept="image/*" style="display:none">
+  <div id="imagePreviewModal" class="image-modal">
+    <div class="modal-header"><strong>📷 Previsualización</strong><button id="cancelImageBtn" style="background:none;border:none;color:#fff;font-size:22px">✕</button></div>
+    <img id="preview" class="preview-image">
+    <div class="modal-footer"><input id="imageCaption" class="caption-input" placeholder="Descripción..."><button id="sendImageBtn" class="send-image-btn">Enviar</button></div>
+  </div>
+
+  <div id="uploadOverlay" class="upload-overlay">
+    <div class="upload-progress">
+      <div class="progress-bar"><div id="uploadBar" class="progress-fill"></div></div>
+      <div id="uploadPercentage">0%</div>
+    </div>
+  </div>
+  <div id="notification" class="notification"></div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  
+  <!-- Módulos JS -->
+  <script src="js/firebase-config.js"></script>
+  <script src="js/cloudinary-upload.js"></script>
+  <script src="js/audio-recorder.js"></script>
+  <script src="js/camera.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
